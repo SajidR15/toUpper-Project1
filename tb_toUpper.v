@@ -1,71 +1,90 @@
+/*
+ * `tb_toUpper.v`
+ * Test bench for the toUpper module.
+ * This test bench will:
+ * 1. Instantiate the `toUpper` module.
+ * 2. Provide all 20 test case inputs from the project description.
+ * 3. Monitor and print the inputs and outputs to the console.
+ * 4. Generate a waveform file `waveform.vcd` for analysis.
+ * 5. Use a parameter `INTER_INPUT_DELAY` for stress testing.
+ */
 `timescale 1ns / 1ps
-`ifdef TB
-`else
-`define TB
-`endif
 
 module tb_toUpper;
-    reg [7:0] din;
-    wire [7:0] dout;
 
-    // instantiate device under test
-    toUpper_gate DUT(.in(din), .out(dout));
-
-    // dump for GTKWave
-    initial begin
-        $dumpfile("toUpper.vcd");
-        $dumpvars(0, tb_toUpper);
-    end
-
-    // test vectors 
-    integer i;
-    reg [7:0] vectors [0:18];
-
-    // INTER_DELAY controls the delay between applying inputs; change this for stress testing
-    parameter INTER_DELAY = 5; // ns (set this to a small value to stress)
+    // This parameter controls the time between test inputs.
+    // Based on the report, the critical path delay is 100 ns.
+    // A value > 100 ns (like 120 ns) should work.
+    // A value < 100 ns (like 99 ns) should fail.
+    parameter INTER_INPUT_DELAY = 120;
     
+    // Inputs to the UUT (Unit Under Test)
+    reg [7:0] input_char;
+    
+    // Outputs from the UUT
+    wire [7:0] output_char;
+
+    // Instantiate the Unit Under Test
+    toUpper UUT (
+        .O(output_char),
+        .I(input_char)
+    );
+    
+    // Initial block to provide stimulus
     initial begin
-        // load vectors
-        vectors[0]  = 8'd40;
-        vectors[1]  = 8'd72;
-        vectors[2]  = 8'd183;
-        vectors[3]  = 8'd131;
-        vectors[4]  = 8'd124;
-        vectors[5]  = 8'd20;
-        vectors[6]  = 8'd235;
-        vectors[7]  = 8'd97;
-        vectors[8]  = 8'd65;
-        vectors[9]  = 8'd122;
-        vectors[10] = 8'd71;
-        vectors[11] = 8'd109;
-        vectors[12] = 8'd146;
-        vectors[13] = 8'd48;
-        vectors[14] = 8'd207;
-        vectors[15] = 8'd58;
-        vectors[16] = 8'd123;
-        vectors[17] = 8'd148;
-        vectors[18] = 8'd127;
+        // Setup waveform dumping
+        $dumpfile("waveform.vcd");
+        $dumpvars(0, tb_toUpper);
 
-        // print header
-        $display("time(ns)\tdec\tbin\tin_char\t->\tout_dec\tout_bin\tout_char");
+        // Monitor to print changes to the console
+        $monitor("Time = %0t ns | Input: %d (%b) | Output: %d (%b)",
+                 $time, input_char, input_char, output_char, output_char);
 
-        for (i = 0; i <= 18; i = i + 1) begin
-            din = vectors[i];
-            #INTER_DELAY; // allow the DUT to settle
-            // print results: display printable ASCII character or '.' for non-printable
-            $display("%0t\t%0d\t%b\t%s\t->\t%0d\t%b\t%s",
-                $time,
-                din,
-                din,
-                ( (din >= 32 && din <= 126) ? {1{din}} : " "), // show char when printable
-                dout,
-                dout,
-                ( (dout >= 32 && dout <= 126) ? {1{dout}} : " ")
-            );
-        end
+        // --- Start Test Cases ---
+        // ( 40
+        #INTER_INPUT_DELAY input_char = 40;
+        // H 72
+        #INTER_INPUT_DELAY input_char = 72;
+        // · 183
+        #INTER_INPUT_DELAY input_char = 183;
+        // ƒ 131
+        #INTER_INPUT_DELAY input_char = 131;
+        // | 124
+        #INTER_INPUT_DELAY input_char = 124;
+        // DC4 20
+        #INTER_INPUT_DELAY input_char = 20;
+        // ë 235
+        #INTER_INPUT_DELAY input_char = 235;
+        // a 97  -> should convert to 65
+        #INTER_INPUT_DELAY input_char = 97;
+        // A 65
+        #INTER_INPUT_DELAY input_char = 65;
+        // z 122 -> should convert to 90
+        #INTER_INPUT_DELAY input_char = 122;
+        // G 71
+        #INTER_INPUT_DELAY input_char = 71;
+        // m 109 -> should convert to 77
+        #INTER_INPUT_DELAY input_char = 109;
+        // ' 146
+        #INTER_INPUT_DELAY input_char = 146;
+        // 0 48
+        #INTER_INPUT_DELAY input_char = 48;
+        // Ï 207
+        #INTER_INPUT_DELAY input_char = 207;
+        // : 58
+        #INTER_INPUT_DELAY input_char = 58;
+        // { 123
+        #INTER_INPUT_DELAY input_char = 123;
+        // ” 148
+        #INTER_INPUT_DELAY input_char = 148;
+        // DEL 127
+        #INTER_INPUT_DELAY input_char = 127;
+        
+        // Add one last delay to see the final output clearly
+        #INTER_INPUT_DELAY;
 
-        // final check: compare results with expected
-        $display("\nManual verification table printed separately. Waveform file toUpper.vcd created.");
-        #100 $finish;
+        // Finish the simulation
+        $finish;
     end
+    
 endmodule
