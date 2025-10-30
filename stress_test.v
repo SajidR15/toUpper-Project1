@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module toUpper_tb;
+module stress_test;
     reg [7:0] A;
     wire [7:0] Y;
     
@@ -33,20 +33,20 @@ module toUpper_tb;
         test_inputs[17] = 8'd148; expected[17] = 8'd148; // ”
         test_inputs[18] = 8'd127; expected[18] = 8'd127; // DEL
         
-        $dumpfile("toUpper_waveform.vcd");
-        $dumpvars(0, toUpper_tb);
+        $dumpfile("stress_waveform.vcd");
+        $dumpvars(0, stress_test);
         
         errors = 0;
         
         $display("==========================================");
-        $display("    toUpper Circuit Comprehensive Test");
+        $display("    STRESS TEST at Minimum Delay (45ns)");
         $display("==========================================");
         $display("Time\tInput\tOutput\tExpected\tStatus");
         $display("-----\t-----\t------\t--------\t------");
         
         for (i = 0; i < 19; i = i + 1) begin
             A = test_inputs[i];
-            #60; // Wait for propagation delay
+            #45; // Test at minimum working delay
             
             if (Y === expected[i]) begin
                 $display("%4d\t%3d\t%3d\t%3d\t\tPASS", $time, A, Y, expected[i]);
@@ -58,9 +58,9 @@ module toUpper_tb;
         
         $display("==========================================");
         if (errors == 0) begin
-            $display("ALL TESTS PASSED! Circuit is working correctly.");
+            $display("STRESS TEST PASSED at 45ns delay!");
         end else begin
-            $display("%0d TESTS FAILED! Circuit needs debugging.", errors);
+            $display("STRESS TEST FAILED: %0d errors at 45ns delay", errors);
         end
         $display("==========================================");
         
