@@ -3,7 +3,7 @@
  * Implements an 8-bit toUpper() function using only primitive
  * gate instantiations with specified propagation delays.
  *
-
+ * This version corrects a bug in the lt_122 comparator.
  */
 `timescale 1ns / 1ps
 
@@ -145,11 +145,12 @@ module toUpper (
 
     // t6 = y[7..3] & I'[2] & B[2] = ... & 0 = 0
     
+    // *** BUG FIX IS HERE ***
     not #(DELAY_NOT) NI1 (not_I1, I[1]);
     and #(DELAY_AND) LT_A7_int (lt_a7_int, lt_a5, y[3]);
     and #(DELAY_AND) LT_A7 (lt_a7, lt_a7_int, y[2]); // This was the missing term
     and #(DELAY_AND) LT_T7 (lt_t7, lt_a7, not_I1); // t7 = y[7..3] & y[2] & I'[1] & 1
-  
+    // *** END BUG FIX ***
     
     // t8 = ... & B[0] = ... & 0 = 0
     
@@ -164,3 +165,4 @@ module toUpper (
     or #(DELAY_OR) LTE_122 (lte_122, lt_122, eq_122);
     
 endmodule
+
